@@ -19,19 +19,23 @@ class MemN2N(object):
     """
     MemN2N class
     """
-    def __init__(self, data_dir, model_file):
+    def __init__(self, data_dir, model_file, log_path):
         self.data_dir       = data_dir
-        self.model_file     = model_file
+        self.model_file     = os.path.join(log_path, model_file)
         self.reversed_dict  = None
         self.memory         = None
         self.model          = None
         self.loss           = None
         self.general_config = None
+        self.log_path = log_path
+        self.best_model = None
+        self.best_memory= None
+        self.best_loss=None
 
     def save_model(self):
         with gzip.open(self.model_file, "wb") as f:
             print("Saving model to file %s ..." % self.model_file)
-            pickle.dump((self.reversed_dict, self.memory, self.model, self.loss, self.general_config), f)
+            pickle.dump((self.reversed_dict, self.best_memory, self.best_model, self.best_loss, self.general_config), f)
 
     def load_model(self):
         # Check if model was loaded
@@ -68,8 +72,7 @@ class MemN2N(object):
         # Train model
         if self.general_config.linear_start:
             print('We will use LS training')
-            train_linear_start(train_story, train_questions, train_qstory,
-                               self.memory, self.model, self.loss, self.general_config)
+            self.best_model, self.best_memory, self.best_loss = train_linear_start(train_story, train_questions, train_qstory, self.memory, self.model, self.loss, self.general_config, self.log_path)
         else:
             train(train_story, train_questions, train_qstory,
                   self.memory, self.model, self.loss, self.general_config)
@@ -172,8 +175,8 @@ class MemN2N(object):
         return pred_answer_idx, pred_prob, memory_probs
 
 
-def train_model(data_dir, model_file):
-    memn2n = MemN2N(data_dir, model_file)
+def train_model(data_dir, model_file, log_path):
+    memn2n = MemN2N(data_dir, model_file, log_path)
     memn2n.train()
 
 
@@ -245,7 +248,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--data-dir", default="data/tasks_1-20_v1-2/en",
                         help="path to dataset directory (default: %(default)s)")
-    parser.add_argument("-m", "--model-file", default="trained_model/memn2n_model_en.pklz",
+    parser.add_argument("-m", "--model-file", default="memn2n_model_en.pklz",
+                        help="model file (default: %(default)s)")
+    parser.add_argument("-l", "--log-path", default="trained_model/",
                         help="model file (default: %(default)s)")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-train", "--train", action="store_true", default=True,
@@ -261,7 +266,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if args.train:
-        train_model(args.data_dir, args.model_file)
+        train_model(args.data_dir, args.model_file, args.log_path)
     elif args.console_demo:
         run_console_demo(args.data_dir, args.model_file)
     else:

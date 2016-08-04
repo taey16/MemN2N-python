@@ -1,5 +1,6 @@
 from __future__ import division
 
+import os
 import sys
 import math
 import numpy as np
@@ -15,7 +16,8 @@ def train(train_story,
           model, 
           loss, 
           general_config,
-          log_file='logs.log'):
+          train_logger,
+          val_logger):
 
   train_config   = general_config.train_config
   dictionary     = general_config.dictionary
@@ -107,9 +109,10 @@ def train(train_story,
 
       if batch_iter % display_inteval == 0:
         print("%d | %d | %g | loss: %g | err: %g" % \
-               (ep, batch_iter, params['lrate'], cost, err / batch_size))
+               (ep, batch_iter, params['lrate'], cost / batch_size, err / batch_size))
         sys.stdout.flush()
-        
+        train_logger.write('%d %d %f %f %f\n' %(ep, batch_iter, params['lrate'], cost, err/batch_size))
+        train_logger.flush()
 
       for i in range(nhops):
         memory[i].emb_query.weight.D[:, 0] = 0
@@ -118,6 +121,7 @@ def train(train_story,
     total_val_err  = 0.
     total_val_cost = 0.
     total_val_num  = 0
+    best_val_cost = 1000000.
 
     for k in range(int(math.floor(val_len / batch_size))):
       batch     = val_range[np.arange(k * batch_size, (k + 1) * batch_size)]
@@ -144,18 +148,32 @@ def train(train_story,
         memory[i].data = memory[0].data
 
       out = model.fprop(input_data)
-      total_val_cost += loss.fprop(out, target_data)
-      total_val_err  += loss.get_error(out, target_data)
-      total_val_num  += batch_size
+      val_cost = loss.fprop(out, target_data)
+      val_err  = loss.get_error(out, target_data)
+      total_val_cost += val_cost
+      total_val_err += val_err
+      total_val_num += batch_size
+
+    if best_val_cost > total_val_cost:
+      best_model = model
+      best_memory = memory
+      best_loss = total_val_cost / total_val_num
+      best_err = total_val_err / total_val_num
+      print('Best loss: %f Best err: %f' % (best_loss, best_err))
+      sys.stdout.flush()
 
     train_error = total_err / total_num
     val_error   = total_val_err / total_val_num
 
     print("%d | %d | loss: %g | err: %g" % (ep, batch_iter, total_val_cost / total_val_num, total_val_err / total_val_num))
     sys.stdout.flush()
+    val_logger.write('%d %d %f %f %f\n' %(ep, batch_iter, params['lrate'], total_val_cost / total_val_num, total_val_err/total_val_num))
+    val_logger.flush()
+
+  return train_logger, val_logger, best_model, best_memory, best_loss
 
 
-def train_linear_start(train_story, train_questions, train_qstory, memory, model, loss, general_config):
+def train_linear_start(train_story, train_questions, train_qstory, memory, model, loss, general_config, log_file='./'):
 
   train_config = general_config.train_config
 
@@ -173,8 +191,23 @@ def train_linear_start(train_story, train_questions, train_qstory, memory, model
   general_config.lrate_decay_step = general_config.ls_lrate_decay_step
   train_config["init_lrate"] = general_config.ls_init_lrate
 
+  train_logger = open(os.path.join(log_file, 'train.log'), 'w')
+  train_logger.write('epoch batch_iter lr loss err\n')
+  train_logger.flush()
+  val_logger = open(os.path.join(log_file, 'val.log'), 'w')
+  val_logger.write('epoch batch_iter lr loss err\n')
+  val_logger.flush()
+
   # Train with new settings
-  train(train_story, train_questions, train_qstory, memory, model, loss, general_config)
+  train_logger, val_logger, best_model, best_memory, best_loss = train(train_story, 
+                                   train_questions, 
+                                   train_qstory, 
+                                   memory, 
+                                   model, 
+                                   loss, 
+                                   general_config, 
+                                   train_logger, 
+                                   val_logger)
 
   # When the validation loss stopped decreasing, 
   # the softmax layers were re-inserted and training recommenced.
@@ -188,7 +221,20 @@ def train_linear_start(train_story, train_questions, train_qstory, memory, model
   train_config["init_lrate"] = init_lrate2
 
   # Train with old settings
-  train(train_story, train_questions, train_qstory, memory, model, loss, general_config)
+  train_logger, val_logger, best_model, best_memory, best_loss = train(train_story, 
+                                   train_questions, 
+                                   train_qstory, 
+                                   memory, 
+                                   model, 
+                                   loss, 
+                                   general_config, 
+                                   train_logger, 
+                                   val_logger)
+
+  train_logger.close()
+  val_logger.close()
+
+  return best_model, best_memory, best_loss
 
 
 def test(test_story, test_questions, test_qstory, memory, model, loss, general_config):

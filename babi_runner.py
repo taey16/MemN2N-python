@@ -50,7 +50,7 @@ def run_all_tasks(data_dir):
     run_task(data_dir, task_id=t + 1)
 
 
-def run_joint_tasks(data_dir):
+def run_joint_tasks(data_dir, log_dir):
   """
   Train and test for all tasks but the trained model is built using training data from all tasks.
   """
@@ -92,6 +92,8 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser()
   parser.add_argument("-d", "--data-dir", default="data/tasks_1-20_v1-2/en",
             help="path to dataset directory (default: %(default)s)")
+  parser.add_argument("-l", "--log-dir", default="trained_model",
+            help="path to dataset directory (default: %(default)s)")
   group = parser.add_mutually_exclusive_group()
   group.add_argument("-t", "--task", default="1", type=int,
              help="train and test for a single task (default: %(default)s)")
@@ -110,8 +112,8 @@ if __name__ == "__main__":
 
   print("Using data from %s" % args.data_dir)
   if args.all_tasks:
-    run_all_tasks(data_dir)
+    run_all_tasks(data_dir, args.log_dir)
   elif args.joint_tasks:
-    run_joint_tasks(data_dir)
+    run_joint_tasks(data_dir, args.log_dir)
   else:
-    run_task(data_dir, task_id=args.task)
+    run_task(data_dir, task_id=args.task, args.log_dir)
