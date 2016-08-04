@@ -67,6 +67,7 @@ class MemN2N(object):
 
         # Train model
         if self.general_config.linear_start:
+            print('We will use LS training')
             train_linear_start(train_story, train_questions, train_qstory,
                                self.memory, self.model, self.loss, self.general_config)
         else:
@@ -242,9 +243,9 @@ def run_web_demo(data_dir, model_file):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--data-dir", default="data/tasks_1-20_v1-2/en-10k",
+    parser.add_argument("-d", "--data-dir", default="data/tasks_1-20_v1-2/en",
                         help="path to dataset directory (default: %(default)s)")
-    parser.add_argument("-m", "--model-file", default="trained_model/memn2n_model_en-10k.pklz",
+    parser.add_argument("-m", "--model-file", default="trained_model/memn2n_model_en.pklz",
                         help="model file (default: %(default)s)")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-train", "--train", action="store_true", default=True,

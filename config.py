@@ -46,7 +46,7 @@ class BabiConfig(object):
         }
 
         if self.linear_start:
-            self.train_config["init_lrate"] = 0.01 / 2
+            self.train_config["init_lrate"] = self.ls_init_lrate
 
         if self.enable_time:
             self.train_config.update({
@@ -65,11 +65,11 @@ class BabiConfigJoint(object):
         self.dictionary       = dictionary
         self.batch_size       = 32
         self.nhops            = 3
-        #self.nepochs          = 60 # 1K training samples XXX;
-        self.nepochs          = 20 # 10K training samples XXX;
+        self.nepochs          = 60 # 1K training samples XXX;
+        #self.nepochs          = 20 # 10K training samples XXX;
 
-        #self.lrate_decay_step = 15   # 1k training sampels reduce learning rate by half every 15 epochs  # XXX:
-        self.lrate_decay_step = 5   # 10k training sampels reduce learning rate by half every 5 epochs  # XXX:
+        self.lrate_decay_step = 15   # 1k training sampels reduce learning rate by half every 15 epochs  # XXX:
+        #self.lrate_decay_step = 5   # 10k training sampels reduce learning rate by half every 5 epochs  # XXX:
 
         # Use 10% of training data for validation  # XXX
         nb_questions        = train_questions.shape[1]
@@ -82,21 +82,22 @@ class BabiConfigJoint(object):
 
         self.enable_time    = True   # add time embeddings
         self.use_bow        = False  # use Bag-of-Words instead of Position-Encoding
+        # we explored commencing training with the softmax in each memory layer removed, 
+        # making the model entirely linear except for the final softmax for answer prediction. 
+        # When the validation loss stopped decreasing, 
+        # the softmax layers were re-inserted and training recommenced.
         self.linear_start   = True
         self.share_type     = 1      # 1: adjacent, 2: layer-wise weight tying
-        self.randomize_time = 0.1    # amount of noise injected into time index
+        self.randomize_time = 0.1    # amount of noise injected into time index (Random Noise RN)
         self.add_proj       = False  # add linear layer between internal states
         self.add_nonlin     = False  # add non-linearity to internal states
 
         self.display_inteval = 10
 
-        # we explored commencing training with the softmax in each memory layer removed, 
-        # making the model entirely linear except for the final softmax for answer prediction. 
-        # When the validation loss stopped decreasing, the softmax layers were re-inserted and training recommenced. XXX
         if self.linear_start:
             self.ls_nepochs          = 30  # XXX:
             self.ls_lrate_decay_step = 31  # XXX:
-            self.ls_init_lrate       = 0.01 / 2
+            self.ls_init_lrate       = 0.01 / 2 # eta = 0.005 XXX
 
         # Training configuration
         self.train_config = {
@@ -112,7 +113,7 @@ class BabiConfigJoint(object):
         }
 
         if self.linear_start:
-            self.train_config["init_lrate"] = 0.01 / 2
+            self.train_config["init_lrate"] = self.ls_init_lrate
 
         if self.enable_time:
             self.train_config.update({

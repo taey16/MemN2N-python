@@ -38,6 +38,9 @@ def train(train_story,
     "max_grad_norm": train_config["max_grad_norm"]
   }
 
+  if randomize_time > 0:
+    print('We use Random Noise (RN)')
+
   for ep in range(nepochs):
     # Decrease learning rate after every decay step
     if (ep + 1) % lrate_decay_step == 0:
@@ -103,7 +106,8 @@ def train(train_story,
       batch_iter += 1
 
       if batch_iter % display_inteval == 0:
-        print("%d | %d | loss: %g | err: %g" % (ep, batch_iter, cost, err / batch_size))
+        print("%d | %d | %g | loss: %g | err: %g" % \
+               (ep, batch_iter, params['lrate'], cost, err / batch_size))
         sys.stdout.flush()
         
 
@@ -160,26 +164,28 @@ def train_linear_start(train_story, train_questions, train_qstory, memory, model
     memory[i].mod_query.modules.pop()
 
   # Save settings
-  nepochs2      = general_config.nepochs
+  nepochs2 = general_config.nepochs
   lrate_decay_step2 = general_config.lrate_decay_step
-  init_lrate2     = train_config["init_lrate"]
+  init_lrate2 = train_config["init_lrate"]
 
   # Add new settings
-  general_config.nepochs      = general_config.ls_nepochs
+  general_config.nepochs = general_config.ls_nepochs
   general_config.lrate_decay_step = general_config.ls_lrate_decay_step
-  train_config["init_lrate"]    = general_config.ls_init_lrate
+  train_config["init_lrate"] = general_config.ls_init_lrate
 
   # Train with new settings
   train(train_story, train_questions, train_qstory, memory, model, loss, general_config)
 
+  # When the validation loss stopped decreasing, 
+  # the softmax layers were re-inserted and training recommenced.
   # Add softmax back
   for i in range(general_config.nhops):
     memory[i].mod_query.add(Softmax())
 
   # Restore old settings
-  general_config.nepochs      = nepochs2
+  general_config.nepochs = nepochs2
   general_config.lrate_decay_step = lrate_decay_step2
-  train_config["init_lrate"]    = init_lrate2
+  train_config["init_lrate"] = init_lrate2
 
   # Train with old settings
   train(train_story, train_questions, train_qstory, memory, model, loss, general_config)

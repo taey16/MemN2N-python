@@ -145,19 +145,19 @@ def build_model(general_config):
   voc_sz  = train_config["voc_sz"]
 
   if not use_bow:
+    print('We use PE')
     train_config["weight"] = np.ones((in_dim, max_words), np.float32)
     for i in range(in_dim):
       for j in range(max_words):
-        train_config["weight"][i][j] = (i + 1 - (in_dim + 1) / 2) * \
-                         (j + 1 - (max_words + 1) / 2)
-    train_config["weight"] = \
-      1 + 4 * train_config["weight"] / (in_dim * max_words)
+        train_config["weight"][i][j] = (i + 1 - (in_dim + 1) / 2) * (j + 1 - (max_words + 1) / 2)
+    train_config["weight"] = 1 + 4 * train_config["weight"] / (in_dim * max_words)
 
   memory = {}
   model = Sequential()
   model.add(LookupTable(voc_sz, in_dim))
   if not use_bow:
     if enable_time:
+      print('We use TE')
       model.add(ElemMult(train_config["weight"][:, :-1]))
     else:
       model.add(ElemMult(train_config["weight"]))
@@ -178,6 +178,7 @@ def build_model(general_config):
     p.add(memory[i])
 
     if add_proj:
+      print('We add linear layer between internal states')
       proj[i] = LinearNB(in_dim, in_dim)
       p.add(proj[i])
     else:
@@ -186,6 +187,7 @@ def build_model(general_config):
     model.add(p)
     model.add(AddTable())
     if add_nonlin:
+      print('We use non-linearity (RELU) to internal states')
       model.add(ReLU())
 
   model.add(LinearNB(out_dim, voc_sz, True))
@@ -194,6 +196,7 @@ def build_model(general_config):
   # Share weights
   if share_type == 1:
     # Type 1: adjacent weight tying
+    print('We use adjacent weight tying')
     memory[0].emb_query.share(model.modules[0])
     for i in range(1, nhops):
       memory[i].emb_query.share(memory[i - 1].emb_out)
@@ -202,6 +205,7 @@ def build_model(general_config):
 
   elif share_type == 2:
     # Type 2: layer-wise weight tying
+    print('We use layer-wise weight tying (RNN-style)')
     for i in range(1, nhops):
       memory[i].emb_query.share(memory[0].emb_query)
       memory[i].emb_out.share(memory[0].emb_out)
