@@ -65,9 +65,11 @@ class BabiConfigJoint(object):
         self.dictionary       = dictionary
         self.batch_size       = 32
         self.nhops            = 3
-        self.nepochs          = 60
+        #self.nepochs          = 60 # 1K training samples XXX;
+        self.nepochs          = 20 # 10K training samples XXX;
 
-        self.lrate_decay_step = 15   # reduce learning rate by half every 25 epochs  # XXX:
+        #self.lrate_decay_step = 15   # 1k training sampels reduce learning rate by half every 15 epochs  # XXX:
+        self.lrate_decay_step = 5   # 10k training sampels reduce learning rate by half every 5 epochs  # XXX:
 
         # Use 10% of training data for validation  # XXX
         nb_questions        = train_questions.shape[1]
@@ -88,6 +90,9 @@ class BabiConfigJoint(object):
 
         self.display_inteval = 10
 
+        # we explored commencing training with the softmax in each memory layer removed, 
+        # making the model entirely linear except for the final softmax for answer prediction. 
+        # When the validation loss stopped decreasing, the softmax layers were re-inserted and training recommenced. XXX
         if self.linear_start:
             self.ls_nepochs          = 30  # XXX:
             self.ls_lrate_decay_step = 31  # XXX:
