@@ -1,5 +1,6 @@
 from __future__ import division
 
+import sys
 import math
 import numpy as np
 
@@ -7,7 +8,14 @@ from memn2n.nn import Softmax
 from util import Progress
 
 
-def train(train_story, train_questions, train_qstory, memory, model, loss, general_config):
+def train(train_story, 
+          train_questions, 
+          train_qstory, 
+          memory, 
+          model, 
+          loss, 
+          general_config,
+          log_file='logs.log'):
 
   train_config   = general_config.train_config
   dictionary     = general_config.dictionary
@@ -23,6 +31,8 @@ def train(train_story, train_questions, train_qstory, memory, model, loss, gener
   train_len    = len(train_range)
   val_len    = len(val_range)
 
+  display_inteval = general_config.display_inteval
+
   params = {
     "lrate": train_config["init_lrate"],
     "max_grad_norm": train_config["max_grad_norm"]
@@ -36,6 +46,7 @@ def train(train_story, train_questions, train_qstory, memory, model, loss, gener
     total_err  = 0.
     total_cost = 0.
     total_num  = 0
+    batch_iter = 0
     for _ in Progress(range(int(math.floor(train_len / batch_size)))):
       # Question batch
       batch = train_range[np.random.randint(train_len, size=batch_size)]
@@ -80,13 +91,21 @@ def train(train_story, train_questions, train_qstory, memory, model, loss, gener
         memory[i].data = memory[0].data
 
       out = model.fprop(input_data)
-      total_cost += loss.fprop(out, target_data)
-      total_err  += loss.get_error(out, target_data)
+      cost = loss.fprop(out, target_data)
+      err  = loss.get_error(out, target_data)
+      total_cost += cost
+      total_err  += err
       total_num  += batch_size
 
       grad = loss.bprop(out, target_data)
       model.bprop(input_data, grad)
       model.update(params)
+      batch_iter += 1
+
+      if batch_iter % display_inteval == 0:
+        print("%d | %d | loss: %g | err: %g" % (ep, batch_iter, cost, err / batch_size))
+        sys.stdout.flush()
+        
 
       for i in range(nhops):
         memory[i].emb_query.weight.D[:, 0] = 0
@@ -128,7 +147,8 @@ def train(train_story, train_questions, train_qstory, memory, model, loss, gener
     train_error = total_err / total_num
     val_error   = total_val_err / total_val_num
 
-    print("%d | train error: %g | val error: %g" % (ep + 1, train_error, val_error))
+    print("%d | %d | loss: %g | err: %g" % (ep, batch_iter, total_val_cost / total_val_num, total_val_err / total_val_num))
+    sys.stdout.flush()
 
 
 def train_linear_start(train_story, train_questions, train_qstory, memory, model, loss, general_config):

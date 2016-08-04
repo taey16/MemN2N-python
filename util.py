@@ -240,7 +240,7 @@ class Progress(object):
       progress = "=" * print_length + " " * (self.bar_length - print_length)
       elapsed_time = time.time() - self.start_time
       print_msg = "\r|%s| %.0f%% %.1fs" % (progress, percent * 100, elapsed_time)
-      sys.stdout.write(print_msg)
-      if self.count == self.total_length:
-        sys.stdout.write("\r" + " " * len(print_msg) + "\r")
-      sys.stdout.flush()
+      #sys.stdout.write(print_msg)
+      #if self.count == self.total_length:
+      #  sys.stdout.write("\r" + " " * len(print_msg) + "\r")
+      #sys.stdout.flush()

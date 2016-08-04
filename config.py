@@ -25,6 +25,8 @@ class BabiConfig(object):
         self.add_proj       = False  # add linear layer between internal states
         self.add_nonlin     = False  # add non-linearity to internal states
 
+        self.display_inteval = 10
+
         if self.linear_start:
             self.ls_nepochs          = 20
             self.ls_lrate_decay_step = 21
@@ -83,6 +85,8 @@ class BabiConfigJoint(object):
         self.randomize_time = 0.1    # amount of noise injected into time index
         self.add_proj       = False  # add linear layer between internal states
         self.add_nonlin     = False  # add non-linearity to internal states
+
+        self.display_inteval = 10
 
         if self.linear_start:
             self.ls_nepochs          = 30  # XXX:
