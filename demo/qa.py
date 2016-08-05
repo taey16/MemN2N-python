@@ -310,7 +310,10 @@ if __name__ == "__main__":
     print("The data directory '%s' does not exist. Please download it first." % args.data_dir)
     sys.exit(1)
 
-  import pdb; pdb.set_trace()
+  if not os.path.exists(args.log_path):
+    print('mkdir -p %s' % args.log_path)
+    os.system('mkdir -p %s' % args.log_path)
+
   if args.train:
     train_model(args.data_dir, args.model_file, args.log_path)
   elif args.test:
