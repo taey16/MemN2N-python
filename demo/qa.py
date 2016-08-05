@@ -29,8 +29,8 @@ class MemN2N(object):
         self.general_config = None
         self.log_path = log_path
         self.best_model = None
-        self.best_memory= None
-        self.best_loss=None
+        self.best_memory = None
+        self.best_loss = None
 
     def save_model(self):
         with gzip.open(self.model_file, "wb") as f:
@@ -79,6 +79,9 @@ class MemN2N(object):
 
         # Save model
         self.save_model()
+
+    def test(self):
+      pass
 
     def get_story_texts(self, test_story, test_questions, test_qstory,
                         question_idx, story_idx, last_sentence_idx):
@@ -180,11 +183,21 @@ def train_model(data_dir, model_file, log_path):
     memn2n.train()
 
 
-def run_console_demo(data_dir, model_file):
+def test_model(data_dir, model_file, log_path):
+    memn2n = MemN2N(data_dir, model_file, log_path)
+    memn2n.load_model()
+    # Read test data
+    print("Reading test data from %s ..." % memn2n.data_dir)
+    test_data_path = glob.glob('%s/qa*_*_test.txt' % memn2n.data_dir)
+    test_story, test_questions, test_qstory = \
+        parse_babi_task(test_data_path, memn2n.general_config.dictionary, False)
+
+
+def run_console_demo(data_dir, model_file, log_path):
     """
     Console-based demo
     """
-    memn2n = MemN2N(data_dir, model_file)
+    memn2n = MemN2N(data_dir, model_file, log_path)
 
     # Try to load model
     memn2n.load_model()
@@ -253,7 +266,7 @@ if __name__ == "__main__":
     parser.add_argument("-l", "--log-path", default="trained_model/",
                         help="model file (default: %(default)s)")
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("-train", "--train", action="store_true", default=True,
+    group.add_argument("-train", "--train", action="store_true", default=False,
                        help="train model (default: %(default)s)")
     group.add_argument("-console", "--console-demo", action="store_true", default=False,
                        help="run console-based demo (default: %(default)s)")
@@ -268,6 +281,6 @@ if __name__ == "__main__":
     if args.train:
         train_model(args.data_dir, args.model_file, args.log_path)
     elif args.console_demo:
-        run_console_demo(args.data_dir, args.model_file)
+        run_console_demo(args.data_dir, args.model_file, args.log_path)
     else:
         run_web_demo(args.data_dir, args.model_file)

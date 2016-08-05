@@ -237,15 +237,21 @@ def train_linear_start(train_story, train_questions, train_qstory, memory, model
   return best_model, best_memory, best_loss
 
 
-def test(test_story, test_questions, test_qstory, memory, model, loss, general_config):
+def test(test_story, 
+         test_questions, 
+         test_qstory, 
+         memory, 
+         model, 
+         loss, 
+         general_config):
   total_test_err = 0.
   total_test_num = 0
 
-  nhops    = general_config.nhops
+  nhops = general_config.nhops
   train_config = general_config.train_config
-  batch_size   = general_config.batch_size
-  dictionary   = general_config.dictionary
-  enable_time  = general_config.enable_time
+  batch_size = general_config.batch_size
+  dictionary = general_config.dictionary
+  enable_time = general_config.enable_time
 
   max_words = train_config["max_words"] \
     if not enable_time else train_config["max_words"] - 1
@@ -260,7 +266,7 @@ def test(test_story, test_questions, test_qstory, memory, model, loss, general_c
     memory[0].data[:] = dictionary["nil"]
 
     for b in range(batch_size):
-      d = test_story[:, :(1 + test_questions[1, batch[b]]), test_questions[0, batch[b]]]
+      d = test_story[:,:(1 + test_questions[1, batch[b]]), test_questions[0, batch[b]]]
 
       offset = max(0, d.shape[1] - train_config["sz"])
       d = d[:, offset:]

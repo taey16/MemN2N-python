@@ -74,9 +74,33 @@ def run_joint_tasks(data_dir, log_dir):
   memory, model, loss = build_model(general_config)
 
   if general_config.linear_start:
-    train_linear_start(train_story, train_questions, train_qstory, memory, model, loss, general_config)
+    train_linear_start(train_story, 
+                       train_questions, 
+                       train_qstory, 
+                       memory, 
+                       model, 
+                       loss, 
+                       general_config,
+                       log_dir)
   else:
-    train(train_story, train_questions, train_qstory, memory, model, loss, general_config)
+    train_logger = open(os.path.join(log_file, 'train.log'), 'w')
+    train_logger.write('epoch batch_iter lr loss err\n')
+    train_logger.flush()
+    val_logger = open(os.path.join(log_file, 'val.log'), 'w')
+    val_logger.write('epoch batch_iter lr loss err\n')
+    val_logger.flush()
+    train_logger, val_logger, best_model, best_memory, best_loss = train(train_story, 
+                                                                         train_questions, 
+                                                                         train_qstory, 
+                                                                         memory, 
+                                                                         model, 
+                                                                         loss, 
+                                                                         general_config, 
+                                                                         train_logger, 
+                                                                         val_logger)
+
+    train_logger.close()
+    val_logger.close()
 
   # Test on each task
   for t in tasks:
@@ -88,7 +112,9 @@ def run_joint_tasks(data_dir, log_dir):
 
     test(test_story, test_questions, test_qstory, memory, model, loss, general_config)
 
+
 if __name__ == "__main__":
+
   parser = argparse.ArgumentParser()
   parser.add_argument("-d", "--data-dir", default="data/tasks_1-20_v1-2/en",
             help="path to dataset directory (default: %(default)s)")
