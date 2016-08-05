@@ -19,19 +19,19 @@ def train(train_story,
           train_logger,
           val_logger):
 
-  train_config   = general_config.train_config
-  dictionary     = general_config.dictionary
-  nepochs      = general_config.nepochs
-  nhops      = general_config.nhops
-  batch_size     = general_config.batch_size
-  enable_time    = general_config.enable_time
-  randomize_time   = general_config.randomize_time
+  train_config = general_config.train_config
+  dictionary = general_config.dictionary
+  nepochs = general_config.nepochs
+  nhops = general_config.nhops
+  batch_size = general_config.batch_size
+  enable_time = general_config.enable_time
+  randomize_time = general_config.randomize_time
   lrate_decay_step = general_config.lrate_decay_step
 
-  train_range  = general_config.train_range  # indices of training questions
-  val_range    = general_config.val_range  # indices of validation questions
-  train_len    = len(train_range)
-  val_len    = len(val_range)
+  train_range = general_config.train_range  # indices of training questions
+  val_range = general_config.val_range  # indices of validation questions
+  train_len = len(train_range)
+  val_len = len(val_range)
 
   display_inteval = general_config.display_inteval
 
@@ -157,7 +157,7 @@ def train(train_story,
     if best_val_cost > total_val_cost:
       best_model = model
       best_memory = memory
-      best_loss = total_val_cost / total_val_num
+      best_loss = val_cost / total_val_num
       best_err = total_val_err / total_val_num
       print('Best loss: %f Best err: %f' % (best_loss, best_err))
       sys.stdout.flush()
@@ -170,10 +170,17 @@ def train(train_story,
     val_logger.write('%d %d %f %f %f\n' %(ep, batch_iter, params['lrate'], total_val_cost / total_val_num, total_val_err/total_val_num))
     val_logger.flush()
 
-  return train_logger, val_logger, best_model, best_memory, best_loss
+  return train_logger, val_logger, best_model, best_memory
 
 
-def train_linear_start(train_story, train_questions, train_qstory, memory, model, loss, general_config, log_file='./'):
+def train_linear_start(train_story, 
+                       train_questions, 
+                       train_qstory, 
+                       memory, 
+                       model, 
+                       loss, 
+                       general_config, 
+                       log_path='./'):
 
   train_config = general_config.train_config
 
@@ -191,23 +198,24 @@ def train_linear_start(train_story, train_questions, train_qstory, memory, model
   general_config.lrate_decay_step = general_config.ls_lrate_decay_step
   train_config["init_lrate"] = general_config.ls_init_lrate
 
-  train_logger = open(os.path.join(log_file, 'train.log'), 'w')
+  train_logger = open(os.path.join(log_path, 'train.log'), 'w')
   train_logger.write('epoch batch_iter lr loss err\n')
   train_logger.flush()
-  val_logger = open(os.path.join(log_file, 'val.log'), 'w')
+  val_logger = open(os.path.join(log_path, 'val.log'), 'w')
   val_logger.write('epoch batch_iter lr loss err\n')
   val_logger.flush()
 
   # Train with new settings
-  train_logger, val_logger, best_model, best_memory, best_loss = train(train_story, 
-                                   train_questions, 
-                                   train_qstory, 
-                                   memory, 
-                                   model, 
-                                   loss, 
-                                   general_config, 
-                                   train_logger, 
-                                   val_logger)
+  train_logger, val_logger, best_model, best_memory = \
+    train(train_story, 
+          train_questions, 
+          train_qstory, 
+          memory, 
+          model, 
+          loss, 
+          general_config, 
+          train_logger, 
+          val_logger)
 
   # When the validation loss stopped decreasing, 
   # the softmax layers were re-inserted and training recommenced.
@@ -221,20 +229,21 @@ def train_linear_start(train_story, train_questions, train_qstory, memory, model
   train_config["init_lrate"] = init_lrate2
 
   # Train with old settings
-  train_logger, val_logger, best_model, best_memory, best_loss = train(train_story, 
-                                   train_questions, 
-                                   train_qstory, 
-                                   memory, 
-                                   model, 
-                                   loss, 
-                                   general_config, 
-                                   train_logger, 
-                                   val_logger)
+  train_logger, val_logger, best_model,best_memory = \
+    train(train_story, 
+          train_questions, 
+          train_qstory, 
+          memory, 
+          model, 
+          loss, 
+          general_config, 
+          train_logger, 
+          val_logger)
 
   train_logger.close()
   val_logger.close()
 
-  return best_model, best_memory, best_loss
+  return best_model, best_memory
 
 
 def test(test_story, 
