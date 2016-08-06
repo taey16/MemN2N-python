@@ -92,7 +92,8 @@ class MemN2N(object):
       val_logger = open(os.path.join(self.log_path, 'val.log'), 'w')
       val_logger.write('epoch batch_iter lr loss err\n')
       val_logger.flush()
-      train_logger, val_logger, _, _ = \
+      global_batch_iter = 0
+      train_logger, val_logger, _, _, _ = \
         train(train_story, 
               train_questions, 
               train_qstory,
@@ -101,7 +102,8 @@ class MemN2N(object):
               self.loss, 
               self.general_config,
               train_logger, 
-              val_logger)
+              val_logger,
+              global_batch_iter)
 
       train_logger.close()
       val_logger.close()
