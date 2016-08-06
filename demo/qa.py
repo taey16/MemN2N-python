@@ -211,7 +211,7 @@ def train_model(data_dir, model_file, log_path):
 def test_model(data_dir, model_file, log_path):
   memn2n = MemN2N(data_dir, model_file, log_path)
   memn2n.load_model()
-  _, _, memn2n.loss = build_model(memn2n.general_config)
+  #_, _, memn2n.loss = build_model(memn2n.general_config)
   # Read test data
   print("Reading test data from %s ..." % memn2n.data_dir)
   test_data_path = glob.glob('%s/qa*_*_test.txt' % memn2n.data_dir)
