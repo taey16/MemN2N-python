@@ -17,7 +17,8 @@ def train(train_story,
           loss, 
           general_config,
           train_logger,
-          val_logger):
+          val_logger,
+          global_batch_iter=0):
 
   train_config = general_config.train_config
   dictionary = general_config.dictionary
@@ -107,11 +108,13 @@ def train(train_story,
       model.update(params)
       batch_iter += 1
 
+      global_batch_iter += 1
+
       if batch_iter % display_inteval == 0:
         print("%d | %d | %g | loss: %g | err: %g" % \
-               (ep, batch_iter, params['lrate'], cost / batch_size, err / batch_size))
+               (ep, global_batch_iter, params['lrate'], cost / batch_size, err / batch_size))
         sys.stdout.flush()
-        train_logger.write('%d %d %f %f %f\n' %(ep, batch_iter, params['lrate'], cost, err/batch_size))
+        train_logger.write('%d %d %f %f %f\n' %(ep, global_batch_iter, params['lrate'], cost/batch_size, err/batch_size))
         train_logger.flush()
 
       for i in range(nhops):
@@ -165,12 +168,12 @@ def train(train_story,
     train_error = total_err / total_num
     val_error   = total_val_err / total_val_num
 
-    print("%d | %d | loss: %g | err: %g" % (ep, batch_iter, total_val_cost / total_val_num, total_val_err / total_val_num))
+    print("%d | %d | loss: %g | err: %g" % (ep, global_batch_iter, total_val_cost / total_val_num, total_val_err / total_val_num))
     sys.stdout.flush()
-    val_logger.write('%d %d %f %f %f\n' %(ep, batch_iter, params['lrate'], total_val_cost / total_val_num, total_val_err/total_val_num))
+    val_logger.write('%d %d %f %f %f\n' %(ep, global_batch_iter, params['lrate'], total_val_cost / total_val_num, total_val_err/total_val_num))
     val_logger.flush()
 
-  return train_logger, val_logger, best_model, best_memory
+  return train_logger, val_logger, best_model, best_memory, global_batch_iter
 
 
 def train_linear_start(train_story, 
@@ -205,17 +208,19 @@ def train_linear_start(train_story,
   val_logger.write('epoch batch_iter lr loss err\n')
   val_logger.flush()
 
+  global_batch_iter = 0
   # Train with new settings
-  train_logger, val_logger, best_model, best_memory = \
+  train_logger, val_logger, best_model, best_memory, global_batch_iter = \
     train(train_story, 
           train_questions, 
           train_qstory, 
           memory, 
           model, 
           loss, 
-          general_config, 
+          general_config,
           train_logger, 
-          val_logger)
+          val_logger,
+          global_batch_iter)
 
   # When the validation loss stopped decreasing, 
   # the softmax layers were re-inserted and training recommenced.
@@ -229,7 +234,7 @@ def train_linear_start(train_story,
   train_config["init_lrate"] = init_lrate2
 
   # Train with old settings
-  train_logger, val_logger, best_model,best_memory = \
+  train_logger, val_logger, best_model, best_memory, _ = \
     train(train_story, 
           train_questions, 
           train_qstory, 
@@ -238,7 +243,8 @@ def train_linear_start(train_story,
           loss, 
           general_config, 
           train_logger, 
-          val_logger)
+          val_logger,
+          global_batch_iter)
 
   train_logger.close()
   val_logger.close()
