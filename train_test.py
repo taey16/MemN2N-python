@@ -42,7 +42,7 @@ def train(train_story,
   }
 
   if randomize_time > 0:
-    print('We use Random Noise (RN)')
+    print('We use Random Noise (RN) ratio of %.1f' % randomize_time)
 
   for ep in range(nepochs):
     # Decrease learning rate after every decay step
