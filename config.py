@@ -81,7 +81,7 @@ class BabiConfigJoint(object):
     self.val_range = rp[nb_train_questions:]
 
     self.enable_time = True   # add time embeddings
-    self.use_bow = False  # use Bag-of-Words instead of Position-Encoding
+    self.use_bow = False # use Bag-of-Words instead of Position-Encoding
     # we explored commencing training with the softmax in each memory layer removed, 
     # making the model entirely linear except for the final softmax for answer prediction. 
     # When the validation loss stopped decreasing, 
@@ -96,6 +96,71 @@ class BabiConfigJoint(object):
 
     if self.linear_start:
       self.ls_nepochs = 30  # XXX:
+      self.ls_lrate_decay_step = 31  # XXX:
+      self.ls_init_lrate = 0.01 / 2 # eta = 0.005 XXX
+
+    # Training configuration
+    self.train_config = {
+      "init_lrate"   : 0.01,
+      "max_grad_norm": 40,
+      "in_dim"     : 50,  # XXX:
+      "out_dim"    : 50,  # XXX:
+      "sz"       : min(50, train_story.shape[1]),
+      "voc_sz"     : len(self.dictionary),
+      "bsz"      : self.batch_size,
+      "max_words"  : len(train_story),
+      "weight"     : None
+    }
+
+    if self.linear_start:
+      self.train_config["init_lrate"] = self.ls_init_lrate
+
+    if self.enable_time:
+      self.train_config.update({
+        "voc_sz"   : self.train_config["voc_sz"] + self.train_config["sz"],
+        "max_words": self.train_config["max_words"] + 1  # Add 1 for time words
+       })
+
+
+class Babi10kConfigJoint(object):
+  """
+  Joint configuration for bAbI
+  """
+  def __init__(self, train_story, train_questions, dictionary):
+
+    # TODO: Inherit from BabiConfig
+    self.dictionary = dictionary
+    self.batch_size = 32
+    self.nhops = 3
+    self.nepochs = 120 # 1K training samples XXX;
+
+    self.lrate_decay_step = 30   # 1k training sampels reduce learning rate by half every 15 epochs  # XXX:
+
+    # Use 10% of training data for validation  # XXX
+    nb_questions = train_questions.shape[1]
+    nb_train_questions = int(nb_questions * 0.9)
+
+    # Randomly split to training and validation sets
+    rp = np.random.permutation(nb_questions)
+    self.train_range = rp[:nb_train_questions]
+    self.val_range = rp[nb_train_questions:]
+
+    self.enable_time = True   # add time embeddings
+    self.use_bow = False  # use Bag-of-Words instead of Position-Encoding
+    # we explored commencing training with the softmax in each memory layer removed, 
+    # making the model entirely linear except for the final softmax for answer prediction. 
+    # When the validation loss stopped decreasing, 
+    # the softmax layers were re-inserted and training recommenced.
+    self.linear_start = True
+    self.share_type = 1    # 1: adjacent, 2: layer-wise weight tying (RNN-style)
+    self.randomize_time = 0.1  # amount of noise injected into time index (Random Noise RN)
+    self.add_proj = False  # add linear layer between internal states
+    self.add_nonlin = False  # add non-linearity to internal states
+
+    self.display_inteval = 10
+
+    if self.linear_start:
+      self.ls_nepochs = 50  # XXX:
       self.ls_lrate_decay_step = 31  # XXX:
       self.ls_init_lrate = 0.01 / 2 # eta = 0.005 XXX
 
