@@ -158,22 +158,24 @@ def train(train_story,
       total_val_err += val_err
       total_val_num += batch_size
 
-    if best_val_cost > total_val_cost:
+    current_val_cost = total_val_cost / total_val_num
+    current_val_err = total_val_err / total_val_num
+    print("%d | %d | loss: %g | err: %g" % (ep, global_batch_iter, current_val_cost, current_val_err))
+    sys.stdout.flush()
+
+    if best_val_cost > current_val_cost:
       best_model = model
       best_memory = memory
-      best_loss = val_cost / total_val_num
-      best_err = total_val_err / total_val_num
-      print('Best loss: %f Best err: %f' % (best_loss, best_err))
-      best_val_cost = total_val_cost
-      best_val_err = total_val_err
+      best_val_cost = current_val_cost
+      best_val_err = current_val_err
+      print('Best loss: %f Best err: %f' % (best_val_cost, best_val_err))
       sys.stdout.flush()
 
     train_error = total_err / total_num
     val_error   = total_val_err / total_val_num
 
-    print("%d | %d | loss: %g | err: %g" % (ep, global_batch_iter, total_val_cost / total_val_num, total_val_err / total_val_num))
-    sys.stdout.flush()
-    val_logger.write('%d %d %f %f %f\n' %(ep, global_batch_iter, params['lrate'], total_val_cost / total_val_num, total_val_err/total_val_num))
+    val_logger.write('%d %d %f %f %f\n' % \
+      (ep, global_batch_iter, params['lrate'], current_val_cost, current_val_err))
     val_logger.flush()
 
   return train_logger, val_logger, best_model, best_memory, global_batch_iter
