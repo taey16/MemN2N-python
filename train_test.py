@@ -160,7 +160,7 @@ def train(train_story,
 
     current_val_cost = total_val_cost / total_val_num
     current_val_err = total_val_err / total_val_num
-    print("%d | %d | loss: %g | err: %g" % (ep, global_batch_iter, current_val_cost, current_val_err))
+    print("%d | %d | val loss: %g | val err: %g" % (ep, global_batch_iter, current_val_cost, current_val_err))
     sys.stdout.flush()
 
     if best_val_cost > current_val_cost:
@@ -168,7 +168,7 @@ def train(train_story,
       best_memory = memory
       best_val_cost = current_val_cost
       best_val_err = current_val_err
-      print('Best loss: %f Best err: %f' % (best_val_cost, best_val_err))
+      print('Best val loss: %f Best val err: %f' % (best_val_cost, best_val_err))
       sys.stdout.flush()
 
     train_error = total_err / total_num
