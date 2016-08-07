@@ -242,13 +242,18 @@ def run_console_demo(data_dir, model_file, log_path):
 
   while True:
     # Pick a random question
-    question_idx    = np.random.randint(test_questions.shape[1])
-    story_idx     = test_questions[0, question_idx]
+    question_idx = np.random.randint(test_questions.shape[1])
+    story_idx = test_questions[0, question_idx]
     last_sentence_idx = test_questions[1, question_idx]
 
     # Get story and question
-    story_txt, question_txt, correct_answer = memn2n.get_story_texts(test_story, test_questions, test_qstory,
-                                     question_idx, story_idx, last_sentence_idx)
+    story_txt, question_txt, correct_answer = \
+      memn2n.get_story_texts(test_story, 
+                             test_questions, 
+                             test_qstory,
+                             question_idx, 
+                             story_idx, 
+                             last_sentence_idx)
     print("* Story:")
     print("\n\t".join(story_txt))
     print("\n* Suggested question:\n\t%s?" % question_txt)
@@ -257,9 +262,13 @@ def run_console_demo(data_dir, model_file, log_path):
       user_question = raw_input("Your question (press Enter to use the suggested question):\n\t")
 
       pred_answer_idx, pred_prob, memory_probs = \
-        memn2n.predict_answer(test_story, test_questions, test_qstory,
-                    question_idx, story_idx, last_sentence_idx,
-                    user_question)
+        memn2n.predict_answer(test_story, 
+                              test_questions, 
+                              test_qstory,
+                              question_idx, 
+                              story_idx, 
+                              last_sentence_idx,
+                              user_question)
 
       pred_answer = memn2n.reversed_dict[pred_answer_idx]
 

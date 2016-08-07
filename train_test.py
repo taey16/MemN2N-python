@@ -125,6 +125,7 @@ def train(train_story,
     total_val_cost = 0.
     total_val_num  = 0
     best_val_cost = 1000000.
+    best_val_err = 1000000.
 
     for k in range(int(math.floor(val_len / batch_size))):
       batch     = val_range[np.arange(k * batch_size, (k + 1) * batch_size)]
@@ -163,6 +164,8 @@ def train(train_story,
       best_loss = val_cost / total_val_num
       best_err = total_val_err / total_val_num
       print('Best loss: %f Best err: %f' % (best_loss, best_err))
+      best_val_cost = total_val_cost
+      best_val_err = total_val_err
       sys.stdout.flush()
 
     train_error = total_err / total_num
