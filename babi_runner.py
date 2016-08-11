@@ -15,42 +15,86 @@ random.seed(seed_val)
 np.random.seed(seed_val)  # for reproducing
 
 
-def run_task(data_dir, task_id):
+def run_task(data_dir, task_id, model_file, log_path):
   """
   Train and test for each task
   """
   print("Train and test for task %d ..." % task_id)
 
-  # Parse data
   train_files = glob.glob('%s/qa%d_*_train.txt' % (data_dir, task_id))
   test_files  = glob.glob('%s/qa%d_*_test.txt' % (data_dir, task_id))
 
   dictionary = {"nil": 0}
-  train_story, train_questions, train_qstory = parse_babi_task(train_files, dictionary, False)
-  test_story, test_questions, test_qstory = parse_babi_task(test_files, dictionary, False)
+  train_story, train_questions, train_qstory = \
+    parse_babi_task(train_files, dictionary, False)
+  test_story, test_questions, test_qstory = \
+    parse_babi_task(test_files, dictionary, False)
 
-  general_config = BabiConfig(train_story, train_questions, dictionary)
+  # Get reversed dictionary mapping index to word
+  # NOTE: this needed to real-time testing
+  reversed_dict = dict((ix, w) for w, ix in dictionary.items())
 
-  memory, model, loss = build_model(general_config)
+  general_config = BabiConfig(train_story, 
+                              train_questions, 
+                              dictionary)
+  memory, model, loss_func = build_model(general_config)
 
   if general_config.linear_start:
-    train_linear_start(train_story, train_questions, train_qstory, memory, model, loss, general_config)
+    print('We will use LS training')
+    best_model, best_memory = \
+      train_linear_start(train_story, 
+                         train_questions, 
+                         train_qstory, 
+                         memory, 
+                         model, 
+                         loss_func, 
+                         general_config,
+                         self.log_path)
   else:
-    train(train_story, train_questions, train_qstory, memory, model, loss, general_config)
+    train_logger = open(os.path.join(self.log_path, 'train.log'), 'w')
+    train_logger.write('epoch batch_iter lr loss err\n')
+    train_logger.flush()
+    val_logger = open(os.path.join(self.log_path, 'val.log'), 'w')
+    val_logger.write('epoch batch_iter lr loss err\n')
+    val_logger.flush()
+    global_batch_iter = 0
+    train_logger, val_logger, _, _, _ = \
+      train(train_story, 
+            train_questions, 
+            train_qstory, 
+            memory, 
+            model, 
+            loss_func, 
+            general_config,
+            train_logger,
+            val_logger,
+            global_batch_iter)
+    train_logger.close()
+    val_logger.close()
 
+  model_file = os.path.join(log_path, model_file)
+  with gzip.open(model_file, 'wb'): as f:
+    print('Saving model to file %s ...' % model_file)
+    pickle.dump((reversed_dict, 
+                 memory,
+                 model,
+                 loss_func,
+                 general_config), f)
+
+  print('Start to testing')
   test(test_story, test_questions, test_qstory, memory, model, loss, general_config)
 
 
-def run_all_tasks(data_dir):
+def run_all_tasks(data_dir, model_file, log_path):
   """
   Train and test for all tasks
   """
   print("Training and testing for all tasks ...")
   for t in range(20):
-    run_task(data_dir, task_id=t + 1)
+    run_task(data_dir, task_id=t+1, model_file, log_path)
 
 
-def run_joint_tasks(data_dir, log_dir):
+def run_joint_tasks(data_dir, model_file, log_path):
   """
   Train and test for all tasks but the trained model is built using training data from all tasks.
   """
@@ -127,8 +171,10 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser()
   parser.add_argument("-d", "--data-dir", default="data/tasks_1-20_v1-2/en",
             help="path to dataset directory (default: %(default)s)")
-  parser.add_argument("-l", "--log-dir", default="trained_model",
-            help="path to dataset directory (default: %(default)s)")
+  parser.add_argument("-m", "--model-file", default="memn2n_model_en.pkl",
+            help="model file (default: %(default)s)")
+  parser.add_argument("-l", "--log-path", default="/storage/babi/trained_model",
+            help="log file path (default: %(default)s)")
   group = parser.add_mutually_exclusive_group()
   group.add_argument("-t", "--task", default="1", type=int,
              help="train and test for a single task (default: %(default)s)")
@@ -140,15 +186,14 @@ if __name__ == "__main__":
 
   # Check if data is available
   import pdb; pdb.set_trace()
-  data_dir = args.data_dir
-  if not os.path.exists(data_dir):
-    print("The data directory '%s' does not exist. Please download it first." % data_dir)
+  if not os.path.exists(args.data_dir):
+    print("The data directory '%s' does not exist. Please download it first." % args.data_dir)
     sys.exit(1)
 
   print("Using data from %s" % args.data_dir)
   if args.all_tasks:
-    run_all_tasks(data_dir, args.log_dir)
+    run_all_tasks(args.data_dir, args.model_file, args.log_path)
   elif args.joint_tasks:
-    run_joint_tasks(data_dir, args.log_dir)
+    run_joint_tasks(args.data_dir, args.model_file, args.log_path)
   else:
-    run_task(data_dir, task_id=args.task, args.log_dir)
+    run_task(args.data_dir, task_id=args.task, args.model_file, args.log_path)

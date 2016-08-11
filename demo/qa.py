@@ -217,12 +217,17 @@ def test_model(data_dir, model_file, log_path):
   # Read test data
   print("Reading test data from %s ..." % memn2n.data_dir)
   test_data_path = glob.glob('%s/qa*_*_test.txt' % memn2n.data_dir)
-  test_story, test_questions, test_qstory = parse_babi_task(test_data_path, 
-                                memn2n.general_config.dictionary, 
-                                False)
-  test(test_story, test_questions, test_qstory, 
-     memn2n.memory, memn2n.model, memn2n.loss, 
-     memn2n.general_config)
+  test_story, test_questions, test_qstory = \
+    parse_babi_task(test_data_path, 
+                    memn2n.general_config.dictionary, 
+                    False)
+  test(test_story, 
+       test_questions, 
+       test_qstory, 
+       memn2n.memory, 
+       memn2n.model, 
+       memn2n.loss, 
+       memn2n.general_config)
 
 
 def run_console_demo(data_dir, model_file, log_path):
@@ -238,7 +243,9 @@ def run_console_demo(data_dir, model_file, log_path):
   print("Reading test data from %s ..." % memn2n.data_dir)
   test_data_path = glob.glob('%s/qa*_*_test.txt' % memn2n.data_dir)
   test_story, test_questions, test_qstory = \
-    parse_babi_task(test_data_path, memn2n.general_config.dictionary, False)
+    parse_babi_task(test_data_path, 
+                    memn2n.general_config.dictionary, 
+                    False)
 
   while True:
     # Pick a random question
@@ -259,7 +266,8 @@ def run_console_demo(data_dir, model_file, log_path):
     print("\n* Suggested question:\n\t%s?" % question_txt)
 
     while True:
-      user_question = raw_input("Your question (press Enter to use the suggested question):\n\t")
+      user_question = \
+        raw_input("Your question (press Enter to use the suggested question):\n\t")
 
       pred_answer_idx, pred_prob, memory_probs = \
         memn2n.predict_answer(test_story, 
@@ -302,10 +310,10 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser()
   parser.add_argument("-d", "--data-dir", default="data/tasks_1-20_v1-2/en",
             help="path to dataset directory (default: %(default)s)")
-  parser.add_argument("-m", "--model-file", default="memn2n_model_en.pklz",
+  parser.add_argument("-m", "--model-file", default="memn2n_model_en.pkl",
             help="model file (default: %(default)s)")
-  parser.add_argument("-l", "--log-path", default="trained_model/",
-            help="model file (default: %(default)s)")
+  parser.add_argument("-l", "--log-path", default="/storage/babi/trained_model/",
+            help="log file path (default: %(default)s)")
   group = parser.add_mutually_exclusive_group()
   group.add_argument("-train", "--train", action="store_true", default=False,
             help="train model (default: %(default)s)")
