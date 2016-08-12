@@ -34,6 +34,8 @@ def parse_babi_task(data_files, dictionary, include_question):
   """
   # Try to reserve spaces beforehand (large matrices for both 1k and 10k data sets)
   # maximum number of words in sentence = 20
+  # max words in sentence: 20
+  # max memory slots(sentence): 500
   story = np.zeros((20, 500, len(data_files) * 3500), np.int16)
   questions = np.zeros((14, len(data_files) * 10000), np.int16)
   qstory = np.zeros((20, len(data_files) * 10000), np.int16)

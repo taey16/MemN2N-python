@@ -73,7 +73,7 @@ def run_task(data_dir, task_id, model_file, log_path):
     val_logger.close()
 
   model_file = os.path.join(log_path, model_file)
-  with gzip.open(model_file, 'wb'): as f:
+  with gzip.open(model_file, 'wb') as f:
     print('Saving model to file %s ...' % model_file)
     pickle.dump((reversed_dict, 
                  memory,
@@ -82,16 +82,22 @@ def run_task(data_dir, task_id, model_file, log_path):
                  general_config), f)
 
   print('Start to testing')
-  test(test_story, test_questions, test_qstory, memory, model, loss, general_config)
+  test(test_story, 
+       test_questions, 
+       test_qstory, 
+       memory, 
+       model, 
+       loss_func, 
+       general_config)
 
 
 def run_all_tasks(data_dir, model_file, log_path):
   """
   Train and test for all tasks
   """
-  print("Training and testing for all tasks ...")
+  print("Training and testing for each task independently...")
   for t in range(20):
-    run_task(data_dir, task_id=t+1, model_file, log_path)
+    run_task(data_dir, t+1, model_file, log_path)
 
 
 def run_joint_tasks(data_dir, model_file, log_path):
@@ -107,27 +113,33 @@ def run_joint_tasks(data_dir, model_file, log_path):
     train_data_path += glob.glob('%s/qa%d_*_train.txt' % (data_dir, t + 1))
 
   dictionary = {"nil": 0}
-  train_story, train_questions, train_qstory = parse_babi_task(train_data_path, 
-                                                               dictionary, 
-                                                               False)
+  train_story, train_questions, train_qstory = \
+    parse_babi_task(train_data_path, 
+                    dictionary, 
+                    False)
 
   # Parse test data for each task so that the dictionary covers all words before training
   for t in tasks:
     test_data_path = glob.glob('%s/qa%d_*_test.txt' % (data_dir, t + 1))
     parse_babi_task(test_data_path, dictionary, False) # ignore output for now
 
+  # Get reversed dictionary mapping index to word
+  # NOTE: this needed to real-time testing
+  reversed_dict = dict((ix, w) for w, ix in dictionary.items())
+
   general_config = BabiConfigJoint(train_story, train_questions, dictionary)
-  memory, model, loss = build_model(general_config)
+  memory, model, loss_func = build_model(general_config)
 
   if general_config.linear_start:
+    print('We will use LS training')
     train_linear_start(train_story, 
                        train_questions, 
                        train_qstory, 
                        memory, 
                        model, 
-                       loss, 
+                       loss_func, 
                        general_config,
-                       log_dir)
+                       log_path)
   else:
     train_logger = open(os.path.join(log_file, 'train.log'), 'w')
     train_logger.write('epoch batch_iter lr loss err\n')
@@ -141,7 +153,7 @@ def run_joint_tasks(data_dir, model_file, log_path):
             train_qstory, 
             memory, 
             model, 
-            loss, 
+            loss_func, 
             general_config, 
             train_logger, 
             val_logger)
@@ -149,12 +161,25 @@ def run_joint_tasks(data_dir, model_file, log_path):
     train_logger.close()
     val_logger.close()
 
+  model_file = os.path.join(log_path, model_file)
+  with gzip.open(model_file, 'wb') as f:
+    print('Saving model to file %s ...' % model_file)
+    pickle.dump((reversed_dict, 
+                 memory,
+                 model,
+                 loss_func,
+                 general_config), f)
+
   # Test on each task
+  print('Start to testing')
   for t in tasks:
     print("Testing for task %d ..." % (t + 1))
     test_data_path = glob.glob('%s/qa%d_*_test.txt' % (data_dir, t + 1))
     dc = len(dictionary)
-    test_story, test_questions, test_qstory = parse_babi_task(test_data_path, dictionary, False)
+    test_story, test_questions, test_qstory = \
+      parse_babi_task(test_data_path, 
+                      dictionary, 
+                      False)
     assert dc == len(dictionary)  # make sure that the dictionary already covers all words
 
     test(test_story, 
@@ -162,12 +187,11 @@ def run_joint_tasks(data_dir, model_file, log_path):
          test_qstory, 
          memory, 
          model, 
-         loss, 
+         loss_func, 
          general_config)
 
 
 if __name__ == "__main__":
-
   parser = argparse.ArgumentParser()
   parser.add_argument("-d", "--data-dir", default="data/tasks_1-20_v1-2/en",
             help="path to dataset directory (default: %(default)s)")
@@ -196,4 +220,4 @@ if __name__ == "__main__":
   elif args.joint_tasks:
     run_joint_tasks(args.data_dir, args.model_file, args.log_path)
   else:
-    run_task(args.data_dir, task_id=args.task, args.model_file, args.log_path)
+    run_task(args.data_dir, args.task, args.model_file, args.log_path)
