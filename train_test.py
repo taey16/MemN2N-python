@@ -44,6 +44,9 @@ def train(train_story,
   if randomize_time > 0:
     print('We use Random Noise (RN) ratio of %.1f' % randomize_time)
 
+  # train/val start
+  best_val_cost = 1000000.
+  best_val_err = 1000000.
   for ep in range(nepochs):
     # Decrease learning rate after every decay step
     if (ep + 1) % lrate_decay_step == 0:
@@ -53,8 +56,6 @@ def train(train_story,
     total_cost = 0.
     total_num  = 0
     batch_iter = 0
-    best_val_cost = 1000000.
-    best_val_err = 1000000.
     for _ in Progress(range(int(math.floor(train_len / batch_size)))):
       # Question batch
       batch = train_range[np.random.randint(train_len, size=batch_size)]
@@ -171,6 +172,7 @@ def train(train_story,
     sys.stdout.flush()
 
     if best_val_cost > current_val_cost:
+      print('current: %f, best: %f' % (current_val_cost, best_val_cost))
       best_model = model
       best_memory = memory
       best_val_cost = current_val_cost
