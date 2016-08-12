@@ -36,14 +36,17 @@ def parse_babi_task(data_files, dictionary, include_question):
   # maximum number of words in sentence = 20
   # max words in sentence: 20
   # max memory slots(sentence): 500
+  # story index: len(data_files) * 3500
   story = np.zeros((20, 500, len(data_files) * 3500), np.int16)
+  # max words in question: 14
   questions = np.zeros((14, len(data_files) * 10000), np.int16)
   qstory = np.zeros((20, len(data_files) * 10000), np.int16)
 
   # NOTE: question's indices are not reset when going through a new story
   story_idx, question_idx, sentence_idx, max_words, max_sentences = -1, -1, -1, 0, 0
 
-  # Mapping line number (within a story) to sentence's index (to support the flag include_question)
+  # Mapping line number (within a story) to sentence's index 
+  # (to support the flag include_question)
   mapping = None
 
   for fp in data_files:
@@ -133,18 +136,18 @@ def build_model(general_config):
       Parallel -> { LookupTable + ElemMult + Sum } -> Identity -> MatVecProd
   """
   train_config = general_config.train_config
-  dictionary   = general_config.dictionary
-  use_bow    = general_config.use_bow
-  nhops    = general_config.nhops
-  add_proj   = general_config.add_proj
-  share_type   = general_config.share_type
-  enable_time  = general_config.enable_time
-  add_nonlin   = general_config.add_nonlin
+  dictionary = general_config.dictionary
+  use_bow = general_config.use_bow
+  nhops = general_config.nhops
+  add_proj = general_config.add_proj
+  share_type = general_config.share_type
+  enable_time = general_config.enable_time
+  add_nonlin = general_config.add_nonlin
 
-  in_dim  = train_config["in_dim"]
-  out_dim   = train_config["out_dim"]
+  in_dim = train_config["in_dim"]
+  out_dim = train_config["out_dim"]
   max_words = train_config["max_words"]
-  voc_sz  = train_config["voc_sz"]
+  voc_sz = train_config["voc_sz"]
 
   if not use_bow:
     print('We use PE')

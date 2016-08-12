@@ -93,7 +93,7 @@ class MemN2N(object):
       val_logger.write('epoch batch_iter lr loss err\n')
       val_logger.flush()
       global_batch_iter = 0
-      train_logger, val_logger, _, _, _ = \
+      train_logger, val_logger, self.best_model, self.best_memory, _ = \
         train(train_story, 
               train_questions, 
               train_qstory,

@@ -53,6 +53,8 @@ def train(train_story,
     total_cost = 0.
     total_num  = 0
     batch_iter = 0
+    best_val_cost = 1000000.
+    best_val_err = 1000000.
     for _ in Progress(range(int(math.floor(train_len / batch_size)))):
       # Question batch
       batch = train_range[np.random.randint(train_len, size=batch_size)]
@@ -111,10 +113,17 @@ def train(train_story,
       global_batch_iter += 1
 
       if batch_iter % display_inteval == 0:
-        print("%d | %d | %g | loss: %g | err: %g" % \
-               (ep, global_batch_iter, params['lrate'], cost / batch_size, err / batch_size))
+        print("%d | %d | %g | loss: %g | err: %g" % (ep, 
+                                                     global_batch_iter, 
+                                                     params['lrate'], 
+                                                     cost / batch_size, 
+                                                     err / batch_size))
         sys.stdout.flush()
-        train_logger.write('%d %d %f %f %f\n' %(ep, global_batch_iter, params['lrate'], cost/batch_size, err/batch_size))
+        train_logger.write('%d %d %f %f %f\n' %(ep, 
+                                                global_batch_iter, 
+                                                params['lrate'], 
+                                                cost/batch_size, 
+                                                err/batch_size))
         train_logger.flush()
 
       for i in range(nhops):
@@ -124,9 +133,6 @@ def train(train_story,
     total_val_err  = 0.
     total_val_cost = 0.
     total_val_num  = 0
-    best_val_cost = 1000000.
-    best_val_err = 1000000.
-
     for k in range(int(math.floor(val_len / batch_size))):
       batch     = val_range[np.arange(k * batch_size, (k + 1) * batch_size)]
       input_data  = np.zeros((train_story.shape[0], batch_size), np.float32)
@@ -160,7 +166,8 @@ def train(train_story,
 
     current_val_cost = total_val_cost / total_val_num
     current_val_err = total_val_err / total_val_num
-    print("%d | %d | val loss: %g | val err: %g" % (ep, global_batch_iter, current_val_cost, current_val_err))
+    print("%d | %d | val loss: %g | val err: %g" % 
+      (ep, global_batch_iter, current_val_cost, current_val_err))
     sys.stdout.flush()
 
     if best_val_cost > current_val_cost:
@@ -168,7 +175,7 @@ def train(train_story,
       best_memory = memory
       best_val_cost = current_val_cost
       best_val_err = current_val_err
-      print('Best val loss: %f Best val err: %f' % (best_val_cost, best_val_err))
+      print('Best val loss: %f, val err: %f' % (best_val_cost, best_val_err))
       sys.stdout.flush()
 
     train_error = total_err / total_num
