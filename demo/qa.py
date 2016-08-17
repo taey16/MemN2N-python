@@ -10,7 +10,7 @@ import pickle
 import argparse
 import numpy as np
 
-from config import BabiConfigJoint
+from config import BabiConfigJoint, Babi10kConfigJoint
 from train_test import train, train_linear_start, test
 from util import parse_babi_task, build_model
 
@@ -70,7 +70,8 @@ class MemN2N(object):
     self.reversed_dict = dict((ix, w) for w, ix in dictionary.items())
 
     # Construct model
-    self.general_config = BabiConfigJoint(train_story, train_questions, dictionary)
+    self.general_config = Babi10kConfigJoint(train_story, train_questions, dictionary)
+    #self.general_config = BabiConfigJoint(train_story, train_questions, dictionary)
     self.memory, self.model, self.loss = build_model(self.general_config)
 
     # Train model
