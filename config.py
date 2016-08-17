@@ -5,6 +5,7 @@ class BabiConfig(object):
   Configuration for bAbI
   """
   def __init__(self, train_story, train_questions, dictionary):
+    print('We will use BabiConfig')
     self.dictionary = dictionary
     self.batch_size = 32
     self.nhops = 3
@@ -60,6 +61,7 @@ class BabiConfigJoint(object):
   Joint configuration for bAbI
   """
   def __init__(self, train_story, train_questions, dictionary):
+    print('We will use BabiConfigJoint')
 
     # TODO: Inherit from BabiConfig
     self.dictionary = dictionary
@@ -124,17 +126,18 @@ class BabiConfigJoint(object):
 
 class Babi10kConfigJoint(object):
   """
-  Joint configuration for bAbI
+  Joint configuration for bAbI-10k
   """
   def __init__(self, train_story, train_questions, dictionary):
+    print('We will use Babi10kConfigJoint')
 
     # TODO: Inherit from BabiConfig
     self.dictionary = dictionary
     self.batch_size = 32
     self.nhops = 3
-    self.nepochs = 120 # 1K training samples XXX;
+    self.nepochs = 30 # 1K training samples XXX;
 
-    self.lrate_decay_step = 30   # 1k training sampels reduce learning rate by half every 15 epochs  # XXX:
+    self.lrate_decay_step = 6  # 1k training sampels reduce learning rate by half every 15 epochs  # XXX:
 
     # Use 10% of training data for validation  # XXX
     nb_questions = train_questions.shape[1]
@@ -160,21 +163,21 @@ class Babi10kConfigJoint(object):
     self.display_inteval = 10
 
     if self.linear_start:
-      self.ls_nepochs = 50  # XXX:
-      self.ls_lrate_decay_step = 31  # XXX:
+      self.ls_nepochs = 5  # XXX:
+      self.ls_lrate_decay_step = 6  # XXX:
       self.ls_init_lrate = 0.01 / 2 # eta = 0.005 XXX
 
     # Training configuration
     self.train_config = {
-      "init_lrate"   : 0.01,
-      "max_grad_norm": 40,
-      "in_dim"     : 50,  # XXX:
-      "out_dim"    : 50,  # XXX:
-      "sz"       : min(50, train_story.shape[1]),
-      "voc_sz"     : len(self.dictionary),
-      "bsz"      : self.batch_size,
-      "max_words"  : len(train_story),
-      "weight"     : None
+      "init_lrate" : 0.01,
+      "max_grad_norm" : 40,
+      "in_dim" : 50,  # XXX:
+      "out_dim" : 50,  # XXX:
+      "sz" : min(50, train_story.shape[1]),
+      "voc_sz" : len(self.dictionary),
+      "bsz" : self.batch_size,
+      "max_words" : len(train_story),
+      "weight" : None
     }
 
     if self.linear_start:
