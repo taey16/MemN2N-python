@@ -18,7 +18,9 @@ def train(train_story,
           general_config,
           train_logger,
           val_logger,
-          global_batch_iter=0):
+          global_batch_iter=0,
+          best_val_cost = 1000000.,
+          best_val_err = 1000000.):
 
   train_config = general_config.train_config
   dictionary = general_config.dictionary
@@ -45,8 +47,6 @@ def train(train_story,
     print('We use Random Noise (RN) ratio of %.1f' % randomize_time)
 
   # train/val start
-  best_val_cost = 1000000.
-  best_val_err = 1000000.
   for ep in range(nepochs):
     # Decrease learning rate after every decay step
     if (ep + 1) % lrate_decay_step == 0:
@@ -187,7 +187,13 @@ def train(train_story,
       (ep, global_batch_iter, params['lrate'], current_val_cost, current_val_err))
     val_logger.flush()
 
-  return train_logger, val_logger, best_model, best_memory, global_batch_iter
+  return train_logger,\
+         val_logger,\
+         best_model,\
+         best_memory,\
+         global_batch_iter,\
+         best_val_cost,\
+         best_val_err
 
 
 def train_linear_start(train_story, 
@@ -215,6 +221,7 @@ def train_linear_start(train_story,
   general_config.lrate_decay_step = general_config.ls_lrate_decay_step
   train_config["init_lrate"] = general_config.ls_init_lrate
 
+  # declear logger
   train_logger = open(os.path.join(log_path, 'train.log'), 'w')
   train_logger.write('epoch batch_iter lr loss err\n')
   train_logger.flush()
@@ -222,9 +229,11 @@ def train_linear_start(train_story,
   val_logger.write('epoch batch_iter lr loss err\n')
   val_logger.flush()
 
-  global_batch_iter = 0
   # Train with new settings
-  train_logger, val_logger, best_model, best_memory, global_batch_iter = \
+  global_batch_iter = 0 
+  best_val_loss = 1000000.
+  best_val_err = 1000000.
+  train_logger, val_logger, best_model, best_memory, global_batch_iter, best_val_loss, best_val_err = \
     train(train_story, 
           train_questions, 
           train_qstory, 
@@ -234,8 +243,12 @@ def train_linear_start(train_story,
           general_config,
           train_logger, 
           val_logger,
-          global_batch_iter)
+          global_batch_iter,
+          best_val_loss,
+          best_val_err)
 
+  print('Switching new lr config, nepoch: %d, lr: %f, decay: %f' %\
+        (nepochs2, init_lrate2, lrate_decay_step2)); sys.stdout.flush()
   # When the validation loss stopped decreasing, 
   # the softmax layers were re-inserted and training recommenced.
   # Add softmax back
@@ -248,7 +261,7 @@ def train_linear_start(train_story,
   train_config["init_lrate"] = init_lrate2
 
   # Train with old settings
-  train_logger, val_logger, best_model, best_memory, _ = \
+  train_logger, val_logger, best_model, best_memory, _, _, _ = \
     train(train_story, 
           train_questions, 
           train_qstory, 
@@ -258,7 +271,9 @@ def train_linear_start(train_story,
           general_config, 
           train_logger, 
           val_logger,
-          global_batch_iter)
+          global_batch_iter,
+          best_val_loss,
+          best_val_err)
 
   train_logger.close()
   val_logger.close()
