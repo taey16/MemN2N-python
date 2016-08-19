@@ -156,7 +156,7 @@ class Babi10kConfigJoint(object):
     # the softmax layers were re-inserted and training recommenced.
     self.linear_start = True
     self.share_type = 1    # 1: adjacent, 2: layer-wise weight tying (RNN-style)
-    self.randomize_time = 0.1  # amount of noise injected into time index (Random Noise RN)
+    self.randomize_time = 0.0#0.1  # amount of noise injected into time index (Random Noise RN)
     self.add_proj = False  # add linear layer between internal states
     self.add_nonlin = False  # add non-linearity to internal states
 
@@ -165,7 +165,7 @@ class Babi10kConfigJoint(object):
     if self.linear_start:
       self.ls_nepochs = 5  # XXX:
       self.ls_lrate_decay_step = 6  # XXX:
-      self.ls_init_lrate = 0.01 / 2 # eta = 0.005 XXX
+      self.ls_init_lrate = 0.01 # eta = 0.005 XXX
 
     # Training configuration
     self.train_config = {
@@ -173,7 +173,7 @@ class Babi10kConfigJoint(object):
       "max_grad_norm" : 40,
       "in_dim" : 50,  # XXX:
       "out_dim" : 50,  # XXX:
-      "sz" : min(50, train_story.shape[1]),
+      "sz" : min(50, train_story.shape[1]), # The capacity of memory is restricted to the most recent 50 sentences.
       "voc_sz" : len(self.dictionary),
       "bsz" : self.batch_size,
       "max_words" : len(train_story),
