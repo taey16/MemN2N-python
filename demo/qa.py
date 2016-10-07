@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 """
 Demo of using Memory Network for question answering
 """
@@ -10,6 +12,7 @@ import pickle
 import argparse
 import numpy as np
 
+sys.path.append('./')
 from config import BabiConfigJoint, Babi10kConfigJoint
 from train_test import train, train_linear_start, test
 from util import parse_babi_task, build_model

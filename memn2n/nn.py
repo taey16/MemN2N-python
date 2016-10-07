@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 from abc import ABCMeta, abstractmethod
 
 import numpy as np

@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import numpy as np
 
 from memn2n.nn import ElemMult, Identity, Sequential, LookupTable, Module
