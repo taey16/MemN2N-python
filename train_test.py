@@ -222,6 +222,10 @@ def train_linear_start(train_story,
   general_config.nepochs = general_config.ls_nepochs
   general_config.lrate_decay_step = general_config.ls_lrate_decay_step
   train_config["init_lrate"] = general_config.ls_init_lrate
+  print('Switching new lr config, nepoch: %d, lr: %f, decay: %f' %\
+        (general_config.nepochs, train_config["init_lrate"], general_config.lrate_decay_step)); sys.stdout.flush()
+  #print('Switching new lr config, nepoch: %d, lr: %f, decay: %f' %\
+  #      (nepochs2, init_lrate2, lrate_decay_step2)); sys.stdout.flush()
 
   # declear logger
   train_logger = open(os.path.join(log_path, 'train.log'), 'w')
@@ -249,8 +253,6 @@ def train_linear_start(train_story,
           best_val_loss,
           best_val_err)
 
-  print('Switching new lr config, nepoch: %d, lr: %f, decay: %f' %\
-        (nepochs2, init_lrate2, lrate_decay_step2)); sys.stdout.flush()
   # When the validation loss stopped decreasing, 
   # the softmax layers were re-inserted and training recommenced.
   # Add softmax back
@@ -261,6 +263,8 @@ def train_linear_start(train_story,
   general_config.nepochs = nepochs2
   general_config.lrate_decay_step = lrate_decay_step2
   train_config["init_lrate"] = init_lrate2
+  print('Switching new lr config, nepoch: %d, lr: %f, decay: %f' %\
+        (general_config.nepochs, train_config["init_lrate"], general_config.lrate_decay_step)); sys.stdout.flush()
 
   # Train with old settings
   train_logger, val_logger, best_model, best_memory, _, _, _ = \

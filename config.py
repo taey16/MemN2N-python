@@ -68,7 +68,7 @@ class BabiConfigJoint(object):
     # TODO: Inherit from BabiConfig
     self.dictionary = dictionary
     self.batch_size = 32
-    self.nhops = 3
+    self.nhops = 4
     self.nepochs = 60 # 1K training samples
     #self.nepochs = 20 # 10K training samples
 

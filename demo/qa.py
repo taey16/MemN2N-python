@@ -73,8 +73,8 @@ class MemN2N(object):
     self.reversed_dict = dict((ix, w) for w, ix in dictionary.items())
 
     # Construct model
-    self.general_config = Babi10kConfigJoint(train_story, train_questions, dictionary)
-    #self.general_config = BabiConfigJoint(train_story, train_questions, dictionary)
+    #self.general_config = Babi10kConfigJoint(train_story, train_questions, dictionary)
+    self.general_config = BabiConfigJoint(train_story, train_questions, dictionary)
     self.memory, self.model, self.loss = build_model(self.general_config)
 
     # Train model
