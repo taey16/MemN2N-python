@@ -22,7 +22,7 @@ class MemN2N(object):
   """
   MemN2N class
   """
-  def __init__(self, data_dir, model_file, log_path):
+  def __init__(self, data_dir, model_file, log_path, rnd_seed):
     self.data_dir = data_dir
     self.model_file = os.path.join(log_path, model_file)
     self.reversed_dict = None
@@ -34,6 +34,7 @@ class MemN2N(object):
     self.best_model = None
     self.best_memory = None
     self.best_loss = None
+    self.rnd_seed = rnd_seed
 
   def save_model(self):
     with gzip.open(self.model_file, "wb") as f:
@@ -56,7 +57,9 @@ class MemN2N(object):
     """
     Train MemN2N model using training data for tasks.
     """
-    np.random.seed(42)  # for reproducing
+    #np.random.seed(42)  # for reproducing
+    np.random.seed(self.rnd_seed)  # for reproducing
+    print("np.random.seed: %d" % self.rnd_seed)
     assert self.data_dir is not None, "data_dir is not specified."
     print("Reading data from %s ..." % self.data_dir)
 
@@ -210,12 +213,12 @@ class MemN2N(object):
     return pred_answer_idx, pred_prob, memory_probs
 
 
-def train_model(data_dir, model_file, log_path):
-  memn2n = MemN2N(data_dir, model_file, log_path)
+def train_model(data_dir, model_file, log_path, rnd_seed):
+  memn2n = MemN2N(data_dir, model_file, log_path, rnd_seed)
   memn2n.train()
 
-def test_model(data_dir, model_file, log_path):
-  memn2n = MemN2N(data_dir, model_file, log_path)
+def test_model(data_dir, model_file, log_path, rnd_seed):
+  memn2n = MemN2N(data_dir, model_file, log_path, rnd_seed)
   memn2n.load_model()
   #_, _, memn2n.loss = build_model(memn2n.general_config)
   # Read test data
@@ -234,11 +237,11 @@ def test_model(data_dir, model_file, log_path):
        memn2n.general_config)
 
 
-def run_console_demo(data_dir, model_file, log_path):
+def run_console_demo(data_dir, model_file, log_path, rnd_seed):
   """
   Console-based demo
   """
-  memn2n = MemN2N(data_dir, model_file, log_path)
+  memn2n = MemN2N(data_dir, model_file, log_path, rnd_seed)
 
   # Try to load model
   memn2n.load_model()
@@ -318,6 +321,8 @@ if __name__ == "__main__":
             help="model file (default: %(default)s)")
   parser.add_argument("-l", "--log-path", default="/storage/babi/trained_model/",
             help="log file path (default: %(default)s)")
+  parser.add_argument("-seed", "--rnd_seed", default=42, type=int,
+            help="np.random.seed (default: %(default)s)")
   group = parser.add_mutually_exclusive_group()
   group.add_argument("-train", "--train", action="store_true", default=False,
             help="train model (default: %(default)s)")
@@ -338,10 +343,10 @@ if __name__ == "__main__":
     os.system('mkdir -p %s' % args.log_path)
 
   if args.train:
-    train_model(args.data_dir, args.model_file, args.log_path)
+    train_model(args.data_dir, args.model_file, args.log_path, args.rnd_seed)
   elif args.test:
-    test_model(args.data_dir, args.model_file, args.log_path)
+    test_model(args.data_dir, args.model_file, args.log_path, args.rnd_seed)
   elif args.console_demo:
-    run_console_demo(args.data_dir, args.model_file, args.log_path)
+    run_console_demo(args.data_dir, args.model_file, args.log_path, args.rnd_seed)
   else:
     run_web_demo(args.data_dir, args.model_file)
